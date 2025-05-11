@@ -14,6 +14,7 @@ class User(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     calendars = relationship("Calendar", back_populates="user")
     scheduling_links = relationship("SchedulingLink", back_populates="user")
+    sessions = relationship("Session", back_populates="user")
 
 class Calendar(Base):
     __tablename__ = "calendars"
@@ -61,4 +62,24 @@ class Booking(Base):
     answers = Column(JSON)  # Map of question IDs to answers
     meeting_time = Column(DateTime)
     created_at = Column(DateTime, default=datetime.utcnow)
-    scheduling_link = relationship("SchedulingLink", back_populates="bookings") 
+    scheduling_link = relationship("SchedulingLink", back_populates="bookings")
+
+class Session(Base):
+    __tablename__ = "sessions"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    token = Column(String, unique=True, index=True)
+    data = Column(JSON)  # For storing session data
+    expires_at = Column(DateTime)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    user = relationship("User", back_populates="sessions")
+
+class Cache(Base):
+    __tablename__ = "cache"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    key = Column(String, unique=True, index=True)
+    value = Column(JSON)
+    expires_at = Column(DateTime)
+    created_at = Column(DateTime, default=datetime.utcnow) 
