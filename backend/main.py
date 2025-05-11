@@ -3,16 +3,22 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from typing import Dict
 
+from routers import scheduling_links
+
 app = FastAPI(title="Scheduler API")
 
-# Configure CORS
+# Configure CORS with explicit settings
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, replace with your frontend URL
-    allow_credentials=True,
-    allow_methods=["*"],
+    allow_origins=["http://localhost:3000"],  # Frontend URL
+    allow_credentials=False,  # Set to False when using wildcard origins
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
+    max_age=3600,
 )
+
+# Include routers
+app.include_router(scheduling_links.router)
 
 @app.get("/")
 async def root() -> Dict[str, str]:

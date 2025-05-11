@@ -41,8 +41,9 @@ class SchedulingLink(Base):
     __tablename__ = "scheduling_links"
     
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"))
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     slug = Column(String, unique=True, index=True)
+    title = Column(String)
     max_uses = Column(Integer, nullable=True)
     expiration_date = Column(DateTime, nullable=True)
     custom_questions = Column(JSON)  # List of question objects
