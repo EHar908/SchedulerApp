@@ -11,7 +11,7 @@ app = FastAPI(title="Scheduler API")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000"],  # Frontend URL
-    allow_credentials=False,  # Set to False when using wildcard origins
+    allow_credentials=True,  # Changed to True to allow credentials
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
     max_age=3600,

@@ -1,8 +1,10 @@
 import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 function Login() {
   const { login } = useAuth();
+  const navigate = useNavigate();
 
   // Extract token from URL and store in localStorage
   useEffect(() => {
@@ -10,11 +12,22 @@ function Login() {
     const token = params.get('token');
     if (token) {
       login(token);
+      navigate('/'); // Redirect to dashboard after successful login
     }
-  }, [login]);
+  }, [login, navigate]);
 
   const handleGoogleLogin = async () => {
-    window.location.href = 'http://localhost:8000/auth/google/auth';
+    try {
+      const response = await fetch('http://localhost:8000/auth/google/auth');
+      const data = await response.json();
+      if (data.authorization_url) {
+        window.location.href = data.authorization_url;
+      } else {
+        console.error('No authorization URL received');
+      }
+    } catch (error) {
+      console.error('Error initiating Google login:', error);
+    }
   };
 
   return (
