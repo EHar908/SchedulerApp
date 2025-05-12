@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field
 from typing import Optional, List, Dict
 from datetime import datetime
+from .schemas.scheduling_window import SchedulingWindowCreate, SchedulingWindowResponse
 
 class CustomQuestion(BaseModel):
     question: str
@@ -35,20 +36,4 @@ class GoogleCalendarResponse(BaseModel):
     created_at: datetime
 
     class Config:
-        from_attributes = True
-
-class SchedulingWindowBase(BaseModel):
-    weekday: int
-    start_hour: int
-    end_hour: int
-
-class SchedulingWindowCreate(SchedulingWindowBase):
-    pass
-
-class SchedulingWindowResponse(SchedulingWindowBase):
-    id: int
-    user_id: int
-    created_at: datetime
-
-    class Config:
-        orm_mode = True 
+        from_attributes = True 

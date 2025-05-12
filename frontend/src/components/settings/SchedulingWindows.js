@@ -17,7 +17,11 @@ function SchedulingWindows() {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch('http://localhost:8000/api/scheduling-windows');
+      const response = await fetch('http://localhost:8000/api/scheduling-windows', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
       if (!response.ok) {
         throw new Error('Failed to fetch scheduling windows');
       }
@@ -38,16 +42,26 @@ function SchedulingWindows() {
         return;
       }
 
-      console.log('Adding window:', { day, startHour, endHour });
+      // Format hours as HH:MM strings
+      const formattedStartHour = `${startHour.toString().padStart(2, '0')}:00`;
+      const formattedEndHour = `${endHour.toString().padStart(2, '0')}:00`;
+
+      console.log('Adding window:', { 
+        day_of_week: day, 
+        start_hour: formattedStartHour, 
+        end_hour: formattedEndHour 
+      });
+
       const response = await fetch('http://localhost:8000/api/scheduling-windows', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },
         body: JSON.stringify({
-          weekday: day,
-          start_hour: startHour,
-          end_hour: endHour,
+          day_of_week: day,
+          start_hour: formattedStartHour,
+          end_hour: formattedEndHour,
         }),
       });
 
@@ -72,9 +86,11 @@ function SchedulingWindows() {
 
   const handleDeleteWindow = async (windowId) => {
     try {
-      console.log('Deleting window:', windowId);
       const response = await fetch(`http://localhost:8000/api/scheduling-windows/${windowId}`, {
         method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
       });
 
       if (!response.ok) {
@@ -124,78 +140,75 @@ function SchedulingWindows() {
             </div>
           </div>
         )}
-        <div className="mt-5">
-          {loading ? (
-            <div className="text-gray-500">Loading...</div>
-          ) : (
-            <div className="space-y-4">
-              {DAYS.map((day, dayIndex) => (
-                <div key={day} className="border rounded-lg p-4">
-                  <h4 className="text-sm font-medium text-gray-900 mb-2">{day}</h4>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Start Hour</label>
-                      <select
-                        className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
-                        value={selectedHours[dayIndex]?.startHour || ''}
-                        onChange={(e) => handleHourChange(dayIndex, 'startHour', e.target.value)}
-                      >
-                        <option value="">Select start hour</option>
-                        {HOURS.map((hour) => (
-                          <option key={hour} value={hour}>
-                            {hour}:00
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">End Hour</label>
-                      <select
-                        className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
-                        value={selectedHours[dayIndex]?.endHour || ''}
-                        onChange={(e) => handleHourChange(dayIndex, 'endHour', e.target.value)}
-                      >
-                        <option value="">Select end hour</option>
-                        {HOURS.map((hour) => (
-                          <option key={hour} value={hour}>
-                            {hour}:00
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                  <div className="mt-4">
-                    <button
-                      type="button"
-                      onClick={() => handleAddWindow(dayIndex)}
-                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+        
+        {loading ? (
+          <div className="text-gray-500">Loading...</div>
+        ) : (
+          <div className="space-y-4">
+            {DAYS.map((day, dayIndex) => (
+              <div key={day} className="border rounded-lg p-4">
+                <h4 className="text-sm font-medium text-gray-900 mb-2">{day}</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Start Hour</label>
+                    <select
+                      className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+                      value={selectedHours[dayIndex]?.startHour || ''}
+                      onChange={(e) => handleHourChange(dayIndex, 'startHour', e.target.value)}
                     >
-                      Add Window
-                    </button>
-                  </div>
-                  <div className="mt-2">
-                    {windows
-                      .filter((window) => window.weekday === dayIndex)
-                      .map((window) => (
-                        <div key={window.id} className="flex items-center justify-between bg-gray-50 p-2 rounded mt-2">
-                          <span className="text-sm text-gray-600">
-                            {window.start_hour}:00 - {window.end_hour}:00
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteWindow(window.id)}
-                            className="text-red-600 hover:text-red-800"
-                          >
-                            Delete
-                          </button>
-                        </div>
+                      <option value="">Select start hour</option>
+                      {HOURS.map((hour) => (
+                        <option key={hour} value={hour}>
+                          {hour}:00
+                        </option>
                       ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">End Hour</label>
+                    <select
+                      className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+                      value={selectedHours[dayIndex]?.endHour || ''}
+                      onChange={(e) => handleHourChange(dayIndex, 'endHour', e.target.value)}
+                    >
+                      <option value="">Select end hour</option>
+                      {HOURS.map((hour) => (
+                        <option key={hour} value={hour}>
+                          {hour}:00
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
+                <div className="mt-4">
+                  <button
+                    type="button"
+                    onClick={() => handleAddWindow(dayIndex)}
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  >
+                    Add Window
+                  </button>
+                </div>
+                {windows
+                  .filter((window) => window.day_of_week === dayIndex)
+                  .map((window) => (
+                    <div key={window.id} className="flex items-center justify-between bg-gray-50 p-2 rounded mt-2">
+                      <span className="text-sm text-gray-600">
+                        {window.start_hour} - {window.end_hour}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteWindow(window.id)}
+                        className="text-red-600 hover:text-red-800"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  ))}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
