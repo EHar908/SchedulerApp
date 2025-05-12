@@ -13,7 +13,11 @@ function SchedulingLinks() {
       try {
         setLoading(true);
         setError(null);
-        const response = await fetch('http://localhost:8000/api/scheduling-links');
+        const response = await fetch('http://localhost:8000/api/scheduling-links', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          },
+        });
         if (!response.ok) {
           throw new Error('Failed to fetch scheduling links');
         }

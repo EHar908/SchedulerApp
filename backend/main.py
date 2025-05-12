@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from typing import Dict
 
-from routers import scheduling_links
+from routers import scheduling_links, google_calendar, scheduling_windows
 
 app = FastAPI(title="Scheduler API")
 
@@ -19,6 +19,8 @@ app.add_middleware(
 
 # Include routers
 app.include_router(scheduling_links.router)
+app.include_router(google_calendar.router)
+app.include_router(scheduling_windows.router)
 
 @app.get("/")
 async def root() -> Dict[str, str]:
