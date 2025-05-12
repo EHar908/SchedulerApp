@@ -18,7 +18,8 @@ function Login() {
 
   const handleGoogleLogin = async () => {
     try {
-      const response = await fetch('http://localhost:8000/auth/google/auth');
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000';
+      const response = await fetch(`${backendUrl}/auth/google/auth`);
       const data = await response.json();
       if (data.authorization_url) {
         window.location.href = data.authorization_url;

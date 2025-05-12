@@ -26,6 +26,7 @@ SCOPES = [
 CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
 CLIENT_SECRET = os.getenv('GOOGLE_CLIENT_SECRET')
 REDIRECT_URI = os.getenv('GOOGLE_REDIRECT_URI')
+FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:3000')
 
 router = APIRouter(prefix="/auth/google", tags=["google-calendar"])
 
@@ -107,7 +108,7 @@ async def oauth2callback(code: str, db: Session = Depends(get_db)):
         # Create JWT token for the user
         token = create_access_token({"sub": str(user.id)})
         # Redirect to frontend with token as query param
-        return RedirectResponse(url=f"http://localhost:3000/login?token={token}")
+        return RedirectResponse(url=f"{FRONTEND_URL}/login?token={token}")
     except Exception as e:
         print(f"Error in oauth2callback: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
