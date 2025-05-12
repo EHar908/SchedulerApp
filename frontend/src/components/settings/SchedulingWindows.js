@@ -67,7 +67,20 @@ function SchedulingWindows() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.detail || 'Failed to add scheduling window');
+        console.log('Full error response:', errorData);
+        // The error message should be in errorData.detail
+        if (errorData.detail) {
+          throw new Error(errorData.detail);
+        }
+        // If no detail, try to get a meaningful message from the status
+        const statusMessages = {
+          400: 'Invalid request. Please check your input.',
+          401: 'Please log in to continue.',
+          403: 'You do not have permission to perform this action.',
+          404: 'The requested resource was not found.',
+          500: 'An unexpected error occurred. Please try again.'
+        };
+        throw new Error(statusMessages[response.status] || 'Failed to add scheduling window');
       }
 
       const newWindow = await response.json();
@@ -78,6 +91,8 @@ function SchedulingWindows() {
         ...prev,
         [day]: undefined
       }));
+      // Clear any existing error
+      setError(null);
     } catch (err) {
       console.error('Error adding window:', err);
       setError(err.message);
@@ -95,10 +110,25 @@ function SchedulingWindows() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.detail || 'Failed to delete scheduling window');
+        console.log('Full error response:', errorData);
+        // The error message should be in errorData.detail
+        if (errorData.detail) {
+          throw new Error(errorData.detail);
+        }
+        // If no detail, try to get a meaningful message from the status
+        const statusMessages = {
+          400: 'Invalid request. Please check your input.',
+          401: 'Please log in to continue.',
+          403: 'You do not have permission to perform this action.',
+          404: 'The requested resource was not found.',
+          500: 'An unexpected error occurred. Please try again.'
+        };
+        throw new Error(statusMessages[response.status] || 'Failed to delete scheduling window');
       }
 
       setWindows(prev => prev.filter(window => window.id !== windowId));
+      // Clear any existing error
+      setError(null);
     } catch (err) {
       console.error('Error deleting window:', err);
       setError(err.message);
@@ -113,6 +143,8 @@ function SchedulingWindows() {
         [type]: parseInt(value)
       }
     }));
+    // Clear any existing error when user changes hours
+    setError(null);
   };
 
   return (

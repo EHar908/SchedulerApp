@@ -65,22 +65,29 @@ async def create_scheduling_window(
             end_hour=window.end_hour
         )
         
-        db.add(db_window)
-        db.commit()
-        db.refresh(db_window)
-        # Ensure updated_at is set
-        if db_window.updated_at is None:
-            db_window.updated_at = db_window.created_at
+        try:
+            db.add(db_window)
             db.commit()
             db.refresh(db_window)
-        print(f"Created scheduling window: {db_window}")
-        return db_window
+            # Ensure updated_at is set
+            if db_window.updated_at is None:
+                db_window.updated_at = db_window.created_at
+                db.commit()
+                db.refresh(db_window)
+            print(f"Created scheduling window: {db_window}")
+            return db_window
+        except Exception as e:
+            db.rollback()
+            print(f"Database error: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid time format. Expected HH:MM")
+    except HTTPException:
+        raise
     except Exception as e:
         print(f"Error creating scheduling window: {str(e)}")
         db.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"Error creating scheduling window: {str(e)}")
 
 @router.delete("/{window_id}")
 async def delete_scheduling_window(window_id: int, db: Session = Depends(get_db)):
