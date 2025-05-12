@@ -5,14 +5,14 @@ from typing import List
 import google.oauth2.credentials
 import google_auth_oauthlib.flow
 import googleapiclient.discovery
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 import os
 from dotenv import load_dotenv
 
 from database import get_db
 from models import User, GoogleCalendar
 from schemas import GoogleCalendarResponse
-from auth import create_access_token
+from auth import create_access_token, get_current_user
 
 # Load environment variables
 load_dotenv()
@@ -118,48 +118,32 @@ async def list_calendars(db: Session = Depends(get_db)):
     calendars = db.query(GoogleCalendar).filter(GoogleCalendar.user_id == 1).all()  # Temporarily hardcoded
     return calendars
 
-@router.get("/events")
-async def get_events(
-    start_date: datetime,
-    end_date: datetime,
-    db: Session = Depends(get_db)
-):
-    """Get events from all connected calendars for the given date range."""
+async def fetch_calendar_events(user_id: int, start_date: date, end_date: date, db: Session):
+    """Utility function to fetch events from all calendars for a user."""
     print(f"Fetching events from {start_date} to {end_date}")
-    calendars = db.query(GoogleCalendar).filter(GoogleCalendar.user_id == 1).all()  # Temporarily hardcoded
-    print(f"Found {len(calendars)} connected calendars")
+    calendars = db.query(GoogleCalendar).filter(GoogleCalendar.user_id == user_id).all()
     
     all_events = []
     for calendar in calendars:
-        print(f"Processing calendar: {calendar.email}")
         try:
-            credentials = google.oauth2.credentials.Credentials(
-                token=calendar.access_token,
-                refresh_token=calendar.refresh_token,
-                token_uri=calendar.token_uri,
-                client_id=CLIENT_ID,
-                client_secret=CLIENT_SECRET,
-                scopes=calendar.scopes
-            )
-            
-            service = googleapiclient.discovery.build('calendar', 'v3', credentials=credentials)
-            
-            events_result = service.events().list(
-                calendarId='primary',
-                timeMin=start_date.isoformat() + 'Z',
-                timeMax=end_date.isoformat() + 'Z',
-                singleEvents=True,
-                orderBy='startTime'
-            ).execute()
-            
-            events = events_result.get('items', [])
-            print(f"Found {len(events)} events in calendar {calendar.email}")
+            # Get events from Google Calendar
+            events = await get_calendar_events(calendar, start_date, end_date)
             all_events.extend(events)
         except Exception as e:
             print(f"Error fetching events for calendar {calendar.email}: {str(e)}")
             continue
     
-    return all_events 
+    return all_events
+
+@router.get("/events")
+async def get_events(
+    start_date: date,
+    end_date: date,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Route handler to get events from all connected calendars for the user."""
+    return await fetch_calendar_events(current_user.id, start_date, end_date, db)
 
 @router.delete("/calendars/{calendar_id}")
 async def disconnect_calendar(calendar_id: int, db: Session = Depends(get_db)):
@@ -175,4 +159,31 @@ async def disconnect_calendar(calendar_id: int, db: Session = Depends(get_db)):
     db.delete(calendar)
     db.commit()
     
-    return {"message": "Calendar disconnected"} 
+    return {"message": "Calendar disconnected"}
+
+async def get_calendar_events(calendar: GoogleCalendar, start_date: date, end_date: date):
+    """Get events from a specific Google Calendar for the given date range."""
+    try:
+        credentials = google.oauth2.credentials.Credentials(
+            token=calendar.access_token,
+            refresh_token=calendar.refresh_token,
+            token_uri=calendar.token_uri,
+            client_id=CLIENT_ID,
+            client_secret=CLIENT_SECRET,
+            scopes=calendar.scopes
+        )
+        
+        service = googleapiclient.discovery.build('calendar', 'v3', credentials=credentials)
+        
+        events_result = service.events().list(
+            calendarId='primary',
+            timeMin=start_date.isoformat() + 'Z',
+            timeMax=end_date.isoformat() + 'Z',
+            singleEvents=True,
+            orderBy='startTime'
+        ).execute()
+        
+        return events_result.get('items', [])
+    except Exception as e:
+        print(f"Error fetching events for calendar {calendar.email}: {str(e)}")
+        return [] 

@@ -15,14 +15,24 @@ import SchedulingLink from './pages/SchedulingLink';
 import CreateLinkPage from './pages/CreateLinkPage';
 import SettingsPage from './pages/SettingsPage';
 import NotFound from './pages/NotFound';
+import PublicSchedulingPage from './pages/PublicSchedulingPage';
 
 // Create a client
 const queryClient = new QueryClient();
 
 // Protected Route component
 const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated } = useAuth();
-  return isAuthenticated ? children : <Navigate to="/login" />;
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" />;
+  }
+
+  return children;
 };
 
 function AppRoutes() {
@@ -31,12 +41,61 @@ function AppRoutes() {
       <Navbar />
       <Routes>
         <Route path="/login" element={<Login />} />
-        <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-        <Route path="/calendars" element={<ProtectedRoute><Calendars /></ProtectedRoute>} />
-        <Route path="/scheduling-links" element={<ProtectedRoute><SchedulingLinks /></ProtectedRoute>} />
+        <Route path="/book/:slug" element={<PublicSchedulingPage />} />
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <div>
+                <Navbar />
+                <div className="container mx-auto px-4 py-8">
+                  <Dashboard />
+                </div>
+              </div>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/calendars"
+          element={
+            <ProtectedRoute>
+              <div>
+                <Navbar />
+                <div className="container mx-auto px-4 py-8">
+                  <Calendars />
+                </div>
+              </div>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/scheduling-links"
+          element={
+            <ProtectedRoute>
+              <div>
+                <Navbar />
+                <div className="container mx-auto px-4 py-8">
+                  <SchedulingLinks />
+                </div>
+              </div>
+            </ProtectedRoute>
+          }
+        />
         <Route path="/scheduling-links/create" element={<ProtectedRoute><CreateLinkPage /></ProtectedRoute>} />
-        <Route path="/s/:slug" element={<SchedulingLink />} />
-        <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+        <Route path="/scheduling-links/create" element={<SchedulingLink />} />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <div>
+                <Navbar />
+                <div className="container mx-auto px-4 py-8">
+                  <SettingsPage />
+                </div>
+              </div>
+            </ProtectedRoute>
+          }
+        />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </div>

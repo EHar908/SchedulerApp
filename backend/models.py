@@ -56,8 +56,11 @@ class SchedulingLink(Base):
     meeting_length = Column(Integer)  # in minutes
     buffer_before = Column(Integer)  # in minutes
     buffer_after = Column(Integer)  # in minutes
+    max_uses = Column(Integer, nullable=True)  # Optional limit on number of times link can be used
+    expiration_date = Column(DateTime(timezone=True), nullable=True)  # Optional expiration date
+    max_days_ahead = Column(Integer)  # Maximum number of days in advance that can be scheduled
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True))
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
     user = relationship("User", back_populates="scheduling_links")
     custom_questions = relationship("CustomQuestion", back_populates="scheduling_link", cascade="all, delete-orphan")
     meetings = relationship("Meeting", back_populates="scheduling_link", cascade="all, delete-orphan")

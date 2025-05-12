@@ -25,6 +25,9 @@ class SchedulingLinkBase(BaseModel):
     meeting_length: int
     buffer_before: int = 0
     buffer_after: int = 0
+    max_uses: Optional[int] = None
+    expiration_date: Optional[datetime] = None
+    max_days_ahead: int
     custom_questions: List[CustomQuestionCreate] = []
 
 class SchedulingLinkCreate(SchedulingLinkBase):
@@ -49,6 +52,20 @@ class BookingCreate(BaseModel):
 class AvailableSlots(BaseModel):
     date: str
     slots: List[str]
+
+    class Config:
+        from_attributes = True
+
+class MeetingResponse(BaseModel):
+    id: int
+    user_id: int
+    scheduling_link_id: int
+    email: str
+    linkedin_url: str
+    meeting_time: datetime
+    answers: Dict[int, str]
+    created_at: datetime
+    updated_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True 
